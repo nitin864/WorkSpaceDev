@@ -44,10 +44,20 @@ export const addMember = async(req ,res) =>{
      }
      
      if(!workspaceId || role){
-        return res.status(404).json({message: "User not found"})
+        return res.status(404).json({message: "Missing required parameters"})
      }
 
-     con
+     if(!["ADMIN" , "MEMBER"].includes(role)){
+        return res.status(404).json({message: "Invalid role"})
+     }
+
+
+     //fetch workspace
+     const workspace = await prisma.workspace.findUnique({where: {id
+        : {workspaceId} , include: {members: true}
+     }})
+
+     
     } catch (error) {
         console.log(error);
         res.status(500).json({message: error.code || error.message})
