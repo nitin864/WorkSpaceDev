@@ -60,8 +60,7 @@ const Layout = () => {
     return (
       <div className='min-h-screen flex justify-center items-center bg-white dark:bg-zinc-950'>
         <CreateOrganization 
-          afterCreateOrganizationUrl="/dashboard"
-          skipInvitationScreen={false}
+           
         />
       </div>
     )
