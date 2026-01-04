@@ -1,11 +1,16 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "../configs/api.js";
 
+/* =========================
+   FETCH WORKSPACES
+========================= */
 export const fetchWorkspaces = createAsyncThunk(
   "workspace/fetchWorkspaces",
   async ({ getToken }, { rejectWithValue }) => {
     try {
-      const token = await getToken({ template: "integration_firebase" }) || await getToken();
+      const token =
+        (await getToken({ template: "integration_firebase" })) ||
+        (await getToken());
 
       const { data } = await api.get("/api/workspaces", {
         headers: {
@@ -13,6 +18,7 @@ export const fetchWorkspaces = createAsyncThunk(
         },
       });
 
+      // backend returns { workspaces: [...] }
       return data.workspaces || [];
     } catch (error) {
       console.error("fetchWorkspaces error:", error);
@@ -20,7 +26,6 @@ export const fetchWorkspaces = createAsyncThunk(
     }
   }
 );
-
 
 const initialState = {
   workspaces: [],
@@ -32,6 +37,9 @@ const workspaceSlice = createSlice({
   name: "workspace",
   initialState,
   reducers: {
+    /* =========================
+       WORKSPACE CRUD
+    ========================= */
     setWorkspaces: (state, action) => {
       state.workspaces = action.payload;
     },
@@ -63,6 +71,57 @@ const workspaceSlice = createSlice({
         (w) => w.id !== action.payload
       );
     },
+
+    /* =========================
+       PROJECT / TASK LOGIC
+    ========================= */
+
+    addTask: (state, action) => {
+      const { projectId } = action.payload;
+
+      if (!state.currentWorkspace) return;
+
+      state.currentWorkspace.projects = state.currentWorkspace.projects.map(
+        (p) =>
+          p.id === projectId
+            ? { ...p, tasks: [...p.tasks, action.payload] }
+            : p
+      );
+    },
+
+    updateTask: (state, action) => {
+      const { projectId, id } = action.payload;
+
+      if (!state.currentWorkspace) return;
+
+      state.currentWorkspace.projects = state.currentWorkspace.projects.map(
+        (p) =>
+          p.id === projectId
+            ? {
+                ...p,
+                tasks: p.tasks.map((t) =>
+                  t.id === id ? action.payload : t
+                ),
+              }
+            : p
+      );
+    },
+
+    deleteTask: (state, action) => {
+      const { projectId, taskId } = action.payload;
+
+      if (!state.currentWorkspace) return;
+
+      state.currentWorkspace.projects = state.currentWorkspace.projects.map(
+        (p) =>
+          p.id === projectId
+            ? {
+                ...p,
+                tasks: p.tasks.filter((t) => t.id !== taskId),
+              }
+            : p
+      );
+    },
   },
 
   extraReducers: (builder) => {
@@ -86,12 +145,18 @@ const workspaceSlice = createSlice({
   },
 });
 
+/* =========================
+   EXPORTS (IMPORTANT)
+========================= */
 export const {
   setWorkspaces,
   setCurrentWorkspace,
   addWorkspace,
   updateWorkspace,
   deleteWorkspace,
+  addTask,
+  updateTask,
+  deleteTask,
 } = workspaceSlice.actions;
 
 export default workspaceSlice.reducer;
