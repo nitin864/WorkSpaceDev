@@ -5,6 +5,8 @@ import { clerkMiddleware } from '@clerk/express';
 import prisma from './configs/prisma.js';
 import { serve } from "inngest/express";
 import { inngest, functions } from ".//inngest/index.js"
+import WorkspaceRouter from './routes/WorkspaceRoutes.js';
+import { protect } from './middlewares/authMiddleware.js';
 
 const app = express(); 
 const PORT = 8000;
@@ -16,14 +18,17 @@ app.use(clerkMiddleware());
 app.get('/', (req, res) => res.send('Server is live!'));
 app.use("/api/inngest", serve({ client: inngest, functions }));
 
-// Test database connection
-app.get('/test-db', async (req, res) => {
-    try {
-        const users = await prisma.user.findMany();
-        res.json({ success: true, count: users.length });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+//Routes 
+app.use("api/workspaces", protect, WorkspaceRouter)
+
+// // Test database connection
+// app.get('/test-db', async (req, res) => {
+//     try {
+//         const users = await prisma.user.findMany();
+//         res.json({ success: true, count: users.length });
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// });
 
 app.listen(PORT, () => console.log(`Server is running on PORT ${PORT}`));
