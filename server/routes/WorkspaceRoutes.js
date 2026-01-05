@@ -1,10 +1,12 @@
-import express from 'express';
-import {  addMember, getUserWorkSpace } from '../controllers/WorkSpaceController.js';
+import express from "express";
+import {
+  addMember,
+  getUserWorkSpace,
+} from "../controllers/WorkSpaceController.js";
 
+const WorkspaceRouter = express.Router();
 
-const  WorkspaceRouter = express.Router();
+WorkspaceRouter.get("/", getUserWorkSpace);
+WorkspaceRouter.post("/add-member", addMember);
 
-WorkspaceRouter.get('/' , getUserWorkSpace)
-WorkspaceRouter.post('/add-member' , addMember)
-
-export default WorkspaceRouter
+export default WorkspaceRouter;
