@@ -133,16 +133,7 @@ const Layout = () => {
   if (user && workspaces.length === 0 && !loading) {
     return (
       <div className='min-h-screen flex justify-center items-center bg-white dark:bg-zinc-950'>
-        <CreateOrganization
-          afterCreateOrganizationUrl="/"
-          skipInvitationScreen={true}
-          appearance={{
-            elements: {
-              rootBox: "mx-auto",
-              card: "shadow-lg"
-            }
-          }}
-        />
+         
       </div>
     )
   }
