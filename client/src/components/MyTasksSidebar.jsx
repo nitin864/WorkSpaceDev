@@ -3,12 +3,14 @@ import { CheckSquareIcon, ChevronDownIcon, ChevronRightIcon } from 'lucide-react
 import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
+
 function MyTasksSidebar() {
-const { user } = useUser()}
+  // TODO: replace with Clerk later
+  const { user } = useUser()
 
   const { currentWorkspace } = useSelector((state) => state.workspace)
 
-  // ✅ SAFETY: never trust backend shape
+  // ✅ always safe
   const projects = currentWorkspace?.projects ?? []
 
   const [showMyTasks, setShowMyTasks] = useState(false)
@@ -35,7 +37,6 @@ const { user } = useUser()}
       return
     }
 
-    // ✅ SAFE: projects always array, tasks always array
     const tasks = projects.flatMap((project) =>
       (project.tasks ?? []).filter(
         (task) => task?.assignee?.id === user.id
@@ -45,6 +46,7 @@ const { user } = useUser()}
     setMyTasks(tasks)
   }, [projects, user?.id])
 
+  // ✅ RETURN IS INSIDE FUNCTION (IMPORTANT)
   return (
     <div className="mt-6 px-3">
       <div
@@ -105,6 +107,6 @@ const { user } = useUser()}
       )}
     </div>
   )
-
+}
 
 export default MyTasksSidebar
