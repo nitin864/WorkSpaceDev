@@ -24,7 +24,148 @@ app.use(cors({
 }));
 app.use(clerkMiddleware());
 
-app.get('/', (req, res) => res.send('Server is live!'));
+app.get('/', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>WorkspaceDev</title>
+      <style>
+        body {
+          margin: 0;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+          background: #0f172a;
+          color: #e5e7eb;
+        }
+        .container {
+          max-width: 1100px;
+          margin: auto;
+          padding: 40px 24px;
+        }
+        header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .logo {
+          font-size: 20px;
+          font-weight: 700;
+        }
+        .logo span {
+          color: #3b82f6;
+        }
+        .hero {
+          text-align: center;
+          margin-top: 120px;
+        }
+        .hero h1 {
+          font-size: 48px;
+          line-height: 1.2;
+        }
+        .hero p {
+          margin-top: 20px;
+          color: #94a3b8;
+          font-size: 18px;
+        }
+        .actions {
+          margin-top: 40px;
+          display: flex;
+          justify-content: center;
+          gap: 16px;
+        }
+        .btn {
+          padding: 12px 20px;
+          border-radius: 10px;
+          font-size: 14px;
+          text-decoration: none;
+          font-weight: 500;
+        }
+        .btn-primary {
+          background: #3b82f6;
+          color: white;
+        }
+        .btn-secondary {
+          border: 1px solid #334155;
+          color: #e5e7eb;
+        }
+        .features {
+          margin-top: 120px;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: 24px;
+        }
+        .card {
+          background: #020617;
+          padding: 24px;
+          border-radius: 14px;
+          border: 1px solid #1e293b;
+        }
+        .card h3 {
+          margin-bottom: 8px;
+        }
+        footer {
+          margin-top: 120px;
+          text-align: center;
+          color: #64748b;
+          font-size: 13px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <header>
+          <div class="logo">Workspace<span>Dev</span></div>
+          <div>
+            <a class="btn btn-secondary" href="http://localhost:5173/sign-in">Sign in</a>
+            <a class="btn btn-primary" href="http://localhost:5173/sign-up">Get Started</a>
+          </div>
+        </header>
+
+        <section class="hero">
+          <h1>
+            Manage projects.<br />
+            Build faster.
+          </h1>
+          <p>
+            A modern workspace platform for teams to plan, track and ship work —
+            powered by Clerk, Prisma & Neon.
+          </p>
+          <div class="actions">
+            <a class="btn btn-primary" href="http://localhost:5173">
+              Open App
+            </a>
+            <a class="btn btn-secondary" href="https://github.com">
+              GitHub
+            </a>
+          </div>
+        </section>
+
+        <section class="features">
+          <div class="card">
+            <h3>Workspaces</h3>
+            <p>Create organizations and manage projects collaboratively.</p>
+          </div>
+          <div class="card">
+            <h3>Task Tracking</h3>
+            <p>Assign tasks, track progress and stay focused.</p>
+          </div>
+          <div class="card">
+            <h3>Secure Auth</h3>
+            <p>Authentication powered by Clerk with role-based access.</p>
+          </div>
+        </section>
+
+        <footer>
+          © ${new Date().getFullYear()} WorkspaceDev · Built with ❤️
+        </footer>
+      </div>
+    </body>
+    </html>
+  `)
+})
+
 
 // Inngest endpoint
 app.use("/api/inngest", serve({ 
