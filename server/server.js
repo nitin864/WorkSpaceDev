@@ -100,9 +100,12 @@ app.get('/', async (req, res) => {
 <body>
   <div class="container">
     <h1>
-      Backend Server (maintained and fixed by nitin)
+      Backend Server HZ2F1
       <span class="badge ok">LIVE</span>
     </h1>
+
+    <h3> maintained by nitin</h3>
+    <h3> WorkSpacedev Server </h3>
 
     <div class="box">
       <div class="row">
