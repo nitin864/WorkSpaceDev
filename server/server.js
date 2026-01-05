@@ -24,147 +24,146 @@ app.use(cors({
 }));
 app.use(clerkMiddleware());
 
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
+  let dbStatus = 'UNKNOWN';
+
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    dbStatus = 'CONNECTED';
+  } catch {
+    dbStatus = 'FAILED';
+  }
+
   res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>WorkspaceDev</title>
-      <style>
-        body {
-          margin: 0;
-          font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-          background: #0f172a;
-          color: #e5e7eb;
-        }
-        .container {
-          max-width: 1100px;
-          margin: auto;
-          padding: 40px 24px;
-        }
-        header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .logo {
-          font-size: 20px;
-          font-weight: 700;
-        }
-        .logo span {
-          color: #3b82f6;
-        }
-        .hero {
-          text-align: center;
-          margin-top: 120px;
-        }
-        .hero h1 {
-          font-size: 48px;
-          line-height: 1.2;
-        }
-        .hero p {
-          margin-top: 20px;
-          color: #94a3b8;
-          font-size: 18px;
-        }
-        .actions {
-          margin-top: 40px;
-          display: flex;
-          justify-content: center;
-          gap: 16px;
-        }
-        .btn {
-          padding: 12px 20px;
-          border-radius: 10px;
-          font-size: 14px;
-          text-decoration: none;
-          font-weight: 500;
-        }
-        .btn-primary {
-          background: #3b82f6;
-          color: white;
-        }
-        .btn-secondary {
-          border: 1px solid #334155;
-          color: #e5e7eb;
-        }
-        .features {
-          margin-top: 120px;
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-          gap: 24px;
-        }
-        .card {
-          background: #020617;
-          padding: 24px;
-          border-radius: 14px;
-          border: 1px solid #1e293b;
-        }
-        .card h3 {
-          margin-bottom: 8px;
-        }
-        footer {
-          margin-top: 120px;
-          text-align: center;
-          color: #64748b;
-          font-size: 13px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <header>
-          <div class="logo">Workspace<span>Dev</span></div>
-          <div>
-            <a class="btn btn-secondary" href="http://localhost:5173/sign-in">Sign in</a>
-            <a class="btn btn-primary" href="http://localhost:5173/sign-up">Get Started</a>
-          </div>
-        </header>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Backend Status</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: monospace;
+      background: #020617;
+      color: #e5e7eb;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 40px 24px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+    .ok { background: #16a34a; }
+    .warn { background: #ca8a04; }
+    .fail { background: #dc2626; }
 
-        <section class="hero">
-          <h1>
-            Manage projects.<br />
-            Build faster.
-          </h1>
-          <p>
-            A modern workspace platform for teams to plan, track and ship work —
-            powered by Clerk, Prisma & Neon.
-          </p>
-          <div class="actions">
-            <a class="btn btn-primary" href="http://localhost:5173">
-              Open App
-            </a>
-            <a class="btn btn-secondary" href="https://github.com">
-              GitHub
-            </a>
-          </div>
-        </section>
+    .box {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 20px;
+    }
 
-        <section class="features">
-          <div class="card">
-            <h3>Workspaces</h3>
-            <p>Create organizations and manage projects collaboratively.</p>
-          </div>
-          <div class="card">
-            <h3>Task Tracking</h3>
-            <p>Assign tasks, track progress and stay focused.</p>
-          </div>
-          <div class="card">
-            <h3>Secure Auth</h3>
-            <p>Authentication powered by Clerk with role-based access.</p>
-          </div>
-        </section>
+    .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #1e293b;
+    }
 
-        <footer>
-          © ${new Date().getFullYear()} WorkspaceDev · Built with ❤️
-        </footer>
+    .row:last-child {
+      border-bottom: none;
+    }
+
+    .key {
+      color: #94a3b8;
+    }
+
+    footer {
+      margin-top: 40px;
+      color: #64748b;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>
+      Backend Server
+      <span class="badge ok">LIVE</span>
+    </h1>
+
+    <div class="box">
+      <div class="row">
+        <span class="key">Status</span>
+        <span class="ok">RUNNING</span>
       </div>
-    </body>
-    </html>
-  `)
-})
+      <div class="row">
+        <span class="key">Environment</span>
+        <span>${process.env.NODE_ENV || 'development'}</span>
+      </div>
+      <div class="row">
+        <span class="key">Port</span>
+        <span>${PORT}</span>
+      </div>
+      <div class="row">
+        <span class="key">Database</span>
+        <span class="${dbStatus === 'CONNECTED' ? 'ok' : 'fail'}">
+          ${dbStatus}
+        </span>
+      </div>
+      <div class="row">
+        <span class="key">Auth (Clerk)</span>
+        <span class="${process.env.CLERK_SECRET_KEY ? 'ok' : 'fail'}">
+          ${process.env.CLERK_SECRET_KEY ? 'CONFIGURED' : 'MISSING'}
+        </span>
+      </div>
+      <div class="row">
+        <span class="key">Inngest</span>
+        <span class="${process.env.INNGEST_EVENT_KEY ? 'ok' : 'warn'}">
+          ${process.env.INNGEST_EVENT_KEY ? 'ENABLED' : 'NOT CONFIGURED'}
+        </span>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="row">
+        <span class="key">API Base</span>
+        <span>/api</span>
+      </div>
+      <div class="row">
+        <span class="key">Workspaces</span>
+        <span>/api/workspaces</span>
+      </div>
+      <div class="row">
+        <span class="key">Inngest</span>
+        <span>/api/inngest</span>
+      </div>
+      <div class="row">
+        <span class="key">Health</span>
+        <span>/api/test-db</span>
+      </div>
+    </div>
+
+    <footer>
+      Server is live · ${new Date().toISOString()}
+    </footer>
+  </div>
+</body>
+</html>
+  `);
+});
 
 
 // Inngest endpoint
