@@ -100,7 +100,7 @@ app.get('/', async (req, res) => {
 <body>
   <div class="container">
     <h1>
-      Backend Server
+      Backend Server (maintained and fixed by nitin)
       <span class="badge ok">LIVE</span>
     </h1>
 
