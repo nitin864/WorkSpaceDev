@@ -24,7 +24,8 @@ const Layout = () => {
   // Initial load of workspaces
   useEffect(() => {
     if (isLoaded && user) {
-      console.log('Fetching workspaces for user:', user.id)
+      console.log('🔍 Clerk User ID:', user.id)
+      console.log('🔍 User Email:', user.primaryEmailAddress?.emailAddress)
       dispatch(fetchWorkspaces({ getToken }))
     }
   }, [isLoaded, user, dispatch, getToken])
