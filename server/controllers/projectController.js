@@ -115,9 +115,29 @@ export const updateProject = async (req, res) => {
       const project = await prisma.project.findUnique({
         where: {id}
       })
+
+      if(!project){
+        return res.status(404).json({message: "Project not found"});
+      }else if(project.team_lead !== userId){
+         return req.status(403).json({message: "You don't have permission to update projects in this workspace"})
+      }
     }
 
-    
+     const project = await prisma.project.update( {
+      where: {id},
+      data: {
+        workspaceId,
+        description,
+        name,
+        status,
+        progress,
+        priority,
+        start_date: start_date ? new Date(start_date) : nulll,
+        end_date: end_date ? new Date(end_date) : nulll,
+      }
+     })
+
+     res.json({project,  message: "Project updated successfully"})
 
 
   } catch (error) {
@@ -125,7 +145,7 @@ export const updateProject = async (req, res) => {
     res.status(500).json({ message: error.code || error.message })
 
   }
-}
+} 
 
 //add member to project
 export const addMember = async (req, res) => {
