@@ -8,6 +8,7 @@ import { inngest, functions } from "./inngest/index.js";
 import WorkspaceRouter from './routes/WorkspaceRoutes.js';
 import { protect } from './middlewares/authMiddleware.js';
 import projectRouter from './routes/ProjectRoutes.js';
+import taskRouter from './routes/TaskRoutes.js';
 
 const app = express(); 
 const PORT = process.env.PORT || 3000;
@@ -179,7 +180,8 @@ app.use("/api/inngest", serve({
 
 // Routes 
 app.use("/api/workspaces", protect, WorkspaceRouter);
-app.use("/api/projects", protect , projectRouter)
+app.use("/api/projects", protect , projectRouter);
+app.use("/api/tasks", protect , taskRouter );
 
 
 // Test database connection
