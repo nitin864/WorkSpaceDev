@@ -9,6 +9,7 @@ import WorkspaceRouter from './routes/WorkspaceRoutes.js';
 import { protect } from './middlewares/authMiddleware.js';
 import projectRouter from './routes/ProjectRoutes.js';
 import taskRouter from './routes/TaskRoutes.js';
+import commentRouter from './routes/commentRoutes.js';
 
 const app = express(); 
 const PORT = process.env.PORT || 3000;
@@ -182,7 +183,7 @@ app.use("/api/inngest", serve({
 app.use("/api/workspaces", protect, WorkspaceRouter);
 app.use("/api/projects", protect , projectRouter);
 app.use("/api/tasks", protect , taskRouter );
-
+app.use("/api/comments", protect , commentRouter );
 
 // Test database connection
 app.get('/api/test-db', async (req, res) => {
