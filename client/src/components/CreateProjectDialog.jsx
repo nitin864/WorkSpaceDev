@@ -120,38 +120,60 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 </div>
 
                     {/* Team Members */}
-                    <div>
-                        <label className="block text-sm mb-1">Team Members</label>
-                        <select className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
-                            onChange={(e) => {
-                                if (e.target.value && !formData.team_members.includes(e.target.value)) {
-                                    setFormData((prev) => ({ ...prev, team_members: [...prev.team_members, e.target.value] }));
-                                }
-                            }}
-                        >
-                            <option value="">Add team members</option>
-                            {currentWorkspace?.members
-                                ?.filter((email) => !formData.team_members.includes(email))
-                                .map((member) => (
-                                    <option key={member.user.email} value={member.email}>
-                                        {member.user.email}
-                                    </option>
-                                ))}
-                        </select>
+                    {/* Team Members */}
+<div>
+  <label className="block text-sm mb-1">Team Members</label>
 
-                        {formData.team_members.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                {formData.team_members.map((email) => (
-                                    <div key={email} className="flex items-center gap-1 bg-blue-200/50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md text-sm" >
-                                        {email}
-                                        <button type="button" onClick={() => removeTeamMember(email)} className="ml-1 hover:bg-blue-300/30 dark:hover:bg-blue-500/30 rounded" >
-                                            <XIcon className="w-3 h-3" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+  <select
+    className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
+    onChange={(e) => {
+      const email = e.target.value;
+      if (email && !formData.team_members.includes(email)) {
+        setFormData((prev) => ({
+          ...prev,
+          team_members: [...prev.team_members, email],
+        }));
+      }
+    }}
+  >
+    <option value="">Add team members</option>
+
+    {currentWorkspace?.members
+      ?.filter((member) => {
+        const email = member.user?.email;
+        return email && !formData.team_members.includes(email);
+      })
+      .map((member) => {
+        const email = member.user?.email;
+        return (
+          <option key={email} value={email}>
+            {email}
+          </option>
+        );
+      })}
+  </select>
+
+  {formData.team_members.length > 0 && (
+    <div className="flex flex-wrap gap-2 mt-2">
+      {formData.team_members.map((email) => (
+        <div
+          key={email}
+          className="flex items-center gap-1 bg-blue-200/50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md text-sm"
+        >
+          {email}
+          <button
+            type="button"
+            onClick={() => removeTeamMember(email)}
+            className="ml-1 hover:bg-blue-300/30 dark:hover:bg-blue-500/30 rounded"
+          >
+            <XIcon className="w-3 h-3" />
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+
 
                     {/* Footer */}
                     <div className="flex justify-end gap-3 pt-2 text-sm">
