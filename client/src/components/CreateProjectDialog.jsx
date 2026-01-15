@@ -1,9 +1,15 @@
 import { useState } from "react";
-import { XIcon } from "lucide-react";
-import { useSelector } from "react-redux";
+import { TerminalSquareIcon, XIcon } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from 'react-hot-toast';
+import api from "../configs/api";
+import { useAuth } from "@clerk/clerk-react";
+import { addTask } from "../features/workspaceSlice";
 
 const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
+    const dispatch = useDispatch();
+    const { getToken } = useAuth();
     const { currentWorkspace } = useSelector((state) => state.workspace);
 
     const [formData, setFormData] = useState({
@@ -22,7 +28,23 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
+        try {
+            if (!formData.team_lead) {
+                return toast.error("Please select the team lead")
+            }
+
+            isSubmitting(true)
+            const { data } = await api.post("/api/projects", { workspaceId: currentWorkspace.id, ...formData }, { headers: { Authorization: ` Bearer ${await getToken()}` } })
+            dispatch(addTask(data.project))
+            setIsDialogOpen(false)
+        } catch (error) {
+            toast.error(error?.response?.data?.message || error.message)
+        }
+        finally {
+            isSubmitting(false)
+        }
+
     };
 
     const removeTeamMember = (email) => {
@@ -92,87 +114,89 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                             <input type="date" value={formData.end_date} onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} min={formData.start_date && new Date(formData.start_date).toISOString().split('T')[0]} className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm" />
                         </div>
                     </div>
-
-                    {/* Lead */}
+                    {/* Project Lead */}
                     <div>
-    <label className="block text-sm mb-1">Project Lead</label>
-    <select 
-        value={formData.team_lead} 
-        onChange={(e) => setFormData({ 
-            ...formData, 
-            team_lead: e.target.value, 
-            team_members: e.target.value 
-                ? [...new Set([...formData.team_members, e.target.value])] 
-                : formData.team_members, 
-        })} 
-        className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
-    >
-        <option value="">No lead</option>
-        {currentWorkspace?.members?.map((member) => (
-            <option 
-                key={member.user?.email || member.id || Math.random()} 
-                value={member.user?.email || ''}
-            >
-                {member.user?.email || 'No email'}
-            </option>
-        ))}
-    </select>
-</div>
+                        <label className="block text-sm mb-1">Project Lead</label>
+
+                        <select
+                            value={formData.team_lead}
+                            onChange={(e) =>
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    team_lead: e.target.value,
+                                    team_members: e.target.value
+                                        ? [...new Set([...prev.team_members, e.target.value])]
+                                        : prev.team_members,
+                                }))
+                            }
+                            className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-sm"
+                        >
+                            <option value="">No lead</option>
+
+                            {currentWorkspace?.members
+                                ?.filter((member) => member.user?.email)
+                                .map((member) => (
+                                    <option key={member.id} value={member.user.email}>
+                                        {member.user.email}
+                                    </option>
+                                ))}
+                        </select>
+                    </div>
+
 
                     {/* Team Members */}
-                    {/* Team Members */}
-<div>
-  <label className="block text-sm mb-1">Team Members</label>
+                    <div>
+                        <label className="block text-sm mb-1">Team Members</label>
 
-  <select
-    className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
-    onChange={(e) => {
-      const email = e.target.value;
-      if (email && !formData.team_members.includes(email)) {
-        setFormData((prev) => ({
-          ...prev,
-          team_members: [...prev.team_members, email],
-        }));
-      }
-    }}
-  >
-    <option value="">Add team members</option>
+                        <select
+                            className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
+                            onChange={(e) => {
+                                const email = e.target.value;
+                                if (email && !formData.team_members.includes(email)) {
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        team_members: [...prev.team_members, email],
+                                    }));
+                                }
+                            }}
+                        >
+                            <option value="">Add team members</option>
 
-    {currentWorkspace?.members
-      ?.filter((member) => {
-        const email = member.user?.email;
-        return email && !formData.team_members.includes(email);
-      })
-      .map((member) => {
-        const email = member.user?.email;
-        return (
-          <option key={email} value={email}>
-            {email}
-          </option>
-        );
-      })}
-  </select>
+                            {currentWorkspace?.members
+                                ?.filter((member) => {
+                                    const email = member.user?.email;
+                                    return email && !formData.team_members.includes(email);
+                                })
+                                .map((member) => {
+                                    const email = member.user?.email;
+                                    return (
+                                        <option key={email} value={email}>
+                                            {email}
+                                        </option>
+                                    );
+                                })}
+                        </select>
 
-  {formData.team_members.length > 0 && (
-    <div className="flex flex-wrap gap-2 mt-2">
-      {formData.team_members.map((email) => (
-        <div
-          key={email}
-          className="flex items-center gap-1 bg-blue-200/50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md text-sm"
-        >
-          {email}
-          <button
-            type="button"
-            onClick={() => removeTeamMember(email)}
-            className="ml-1 hover:bg-blue-300/30 dark:hover:bg-blue-500/30 rounded"
-          >
-            <XIcon className="w-3 h-3" />
-          </button>
-        </div>
-      ))}
-    </div>
-  )}
-</div>
+                        {formData.team_members.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {formData.team_members.map((email) => (
+                                    <div
+                                        key={email}
+                                        className="flex items-center gap-1 bg-blue-200/50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md text-sm"
+                                    >
+                                        {email}
+                                        <button
+                                            type="button"
+                                            onClick={() => removeTeamMember(email)}
+                                            className="ml-1 hover:bg-blue-300/30 dark:hover:bg-blue-500/30 rounded"
+                                        >
+                                            <XIcon className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
 
                     {/* Footer */}

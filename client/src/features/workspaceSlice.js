@@ -67,7 +67,7 @@ const workspaceSlice = createSlice({
     deleteWorkspace: (state, action) => {
       state.workspaces = state.workspaces.filter(
         (w) => w.id !== action.payload
-      );
+      );  
     },
     /* =========================
        PROJECT / TASK LOGIC

@@ -1,15 +1,48 @@
 import { Plus } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react' // ← ADD useEffect
 import StatsGrid from '../components/StatsGrid'
 import ProjectOverview from '../components/ProjectOverview'
 import RecentActivity from '../components/RecentActivity'
 import TasksSummary from '../components/TasksSummary'
 import CreateProjectDialog from '../components/CreateProjectDialog'
-import { useUser } from '@clerk/clerk-react'
+import { useUser, useAuth } from '@clerk/clerk-react' // ← ADD useAuth
+import api from '../configs/api' // ← ADD this import
 
 const Dashboard = () => {
     const { user } = useUser()
+    const { getToken } = useAuth() // ← ADD this
     const [isDialogOpen, setIsDialogOpen] = useState(false)
+    
+    // ========================================
+    // 🔥 USER SYNC LOGIC (ADD THIS BLOCK)
+    // ========================================
+    useEffect(() => {
+        const syncUserToDB = async () => {
+            if (!user) return;
+
+            try {
+                await api.post(
+                    "/api/auth/sync",
+                    {
+                        email: user.emailAddresses[0].emailAddress,
+                        name: user.fullName || "",
+                        image: user.imageUrl || "",
+                    },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${await getToken()}`,
+                        },
+                    }
+                );
+                console.log("✅ User synced to database");
+            } catch (error) {
+                console.error("❌ User sync failed:", error);
+            }
+        };
+
+        syncUserToDB();
+    }, [user, getToken]); // ← Runs once when user loads
+    // ========================================
     
     return (
         <div className='max-w-6xl mx-auto'>
@@ -30,7 +63,6 @@ const Dashboard = () => {
                 </button>
             </div>
             
-            {/* Move CreateProjectDialog here - outside the button */}
             <CreateProjectDialog 
                 isDialogOpen={isDialogOpen} 
                 setIsDialogOpen={setIsDialogOpen} 

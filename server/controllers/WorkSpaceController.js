@@ -1,5 +1,8 @@
 import prisma from "../configs/prisma.js";
 
+/* =========================
+   GET USER WORKSPACES
+========================= */
 export const getUserWorkSpace = async (req, res) => {
   try {
     const userId = req.auth?.userId;
@@ -7,31 +10,43 @@ export const getUserWorkSpace = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const workspaces = await prisma.workspace.findMany({
-      where: {
-        members: { some: { userId } },
+    const workspaces = await prisma.workspace.create({
+  data: {
+    name,
+    description,
+    ownerId: userId,
+    members: {
+      create: {
+        userId,
+        role: "ADMIN",
       },
+    },
+  },
+  include: {
+    members: {
       include: {
-        projects: {
-          include: { tasks: true },
-        },
-        members: true,
+        user: { select: { id: true, email: true, name: true } },
       },
-    });
+    },
+  },
+});
 
-    return res.status(200).json({ workspaces });
+    res.status(200).json({ workspaces });
   } catch (error) {
     console.error("getUserWorkSpace error:", error);
-    return res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
+/* =========================
+   ADD MEMBER TO WORKSPACE
+========================= */
 export const addMember = async (req, res) => {
   try {
-    const userId = req.auth?.userId;
+    const adminId = req.auth?.userId;
     const { email, role, workspaceId, message } = req.body;
 
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!adminId) return res.status(401).json({ message: "Unauthorized" });
     if (!email || !role || !workspaceId) {
       return res.status(400).json({ message: "Missing parameters" });
     }
@@ -49,7 +64,7 @@ export const addMember = async (req, res) => {
     }
 
     const isAdmin = workspace.members.some(
-      (m) => m.userId === userId && m.role === "ADMIN"
+      (m) => m.userId === adminId && m.role === "ADMIN"
     );
 
     if (!isAdmin) {
@@ -57,12 +72,22 @@ export const addMember = async (req, res) => {
     }
 
     const member = await prisma.workspaceMember.create({
-      data: { userId: user.id, workspaceId, role, message },
+      data: {
+        userId: user.id,
+        workspaceId,
+        role,
+        message,
+      },
+      include: {
+        user: {
+          select: { id: true, email: true, name: true },
+        },
+      },
     });
 
-    return res.status(201).json({ member });
+    res.status(201).json({ member });
   } catch (error) {
     console.error("addMember error:", error);
-    return res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
