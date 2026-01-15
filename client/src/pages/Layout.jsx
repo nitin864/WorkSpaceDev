@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react' // Added useCallback
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
 import { Outlet } from 'react-router-dom'
@@ -34,11 +34,16 @@ const Layout = () => {
     dispatch(loadTheme())
   }, [dispatch])
 
+  // ✅ FIX: Memoize getToken wrapper to prevent infinite loop
+  const stableGetToken = useCallback(() => {
+    return getToken
+  }, [getToken])
+
   useEffect(() => {
     if (isLoaded && user) {
-      dispatch(fetchWorkspaces({ getToken }))
+      dispatch(fetchWorkspaces({ getToken: stableGetToken() }))
     }
-  }, [isLoaded, user, dispatch, getToken])
+  }, [isLoaded, user, dispatch, stableGetToken])
 
   if (!isLoaded) {
     return (
@@ -240,7 +245,7 @@ const Layout = () => {
   /* ================= APP ================= */
   return (
     <div className="flex h-screen bg-black text-white">
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
       <div className="flex flex-col flex-1">
         <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto">
