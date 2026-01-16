@@ -46,23 +46,52 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        try {
+    if (!formData.team_lead) {
+        return toast.error("Please select project lead");
+    }
 
+    try {
+        setIsSubmitting(true);   
 
-            isSubmitting(true)
-            const { data } = await api.post("/api/projects", { workspaceId: currentWorkspace.id, ...formData }, { headers: { Authorization: ` Bearer ${await getToken()}` } })
-            dispatch(addTask(data.project))
-            setIsDialogOpen(false)
-        } catch (error) {
-            toast.error(error?.response?.data?.message || error.message)
-        }
-        finally {
-            isSubmitting(false)
-        }
+        const { data } = await api.post(
+            "/api/projects", 
+            { 
+                workspaceId: currentWorkspace.id, 
+                ...formData 
+            }, 
+            { 
+                headers: { 
+                    Authorization: `Bearer ${await getToken()}` 
+                } 
+            }
+        );
 
-    };
+        dispatch(addTask(data.project));
+        toast.success("Project created successfully!");
+        setIsDialogOpen(false);
+        
+        // Reset form
+        setFormData({
+            name: "",
+            description: "",
+            status: "PLANNING",
+            priority: "MEDIUM",
+            start_date: "",
+            end_date: "",
+            team_members: [],
+            team_lead: "",
+            progress: 0,
+        });
+
+    } catch (error) {
+        console.error("Create project error:", error);
+        toast.error(error?.response?.data?.message || error.message);
+    } finally {
+        setIsSubmitting(false);  
+    }
+};
 
     const removeTeamMember = (email) => {
         setFormData((prev) => ({ ...prev, team_members: prev.team_members.filter(m => m !== email) }));

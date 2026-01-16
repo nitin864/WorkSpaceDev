@@ -1,147 +1,203 @@
-
-
-//create task 
-
-import { err } from "inngest/types";
 import prisma from "../configs/prisma.js";
 import { inngest } from "../inngest/index.js";
 
+/* ======================================================
+   CREATE TASK
+====================================================== */
 export const createTask = async (req, res) => {
-    try {
-        const { userId } = await req.auth()
+  try {
+    const { userId } = await req.auth();
+    const {
+      projectId,
+      title,
+      description,
+      status,
+      priority,
+      assigneeId,
+      due_date,
+    } = req.body;
 
-        const { projectId, title, description, type, status, priority, assigneeId, due_date } = req.body;
-
-        const origin = req.get('origin')
-
-        //check if user has admin role for project 
-        const project = await prisma.project.findUnique({
-            where: { id: projectId },
-            include: { members: { include: { user: true } } }
-        })
-
-        if (!project) {
-            return res.status(404).json({ message: "Project not found" })
-
-        } else if (project.team_lead !== userId) {
-            return res.status(403).json({ message: "You don't have admin privilegesfor this project " })
-        } else if (assigneeId && !project.members.find((member) => member.user.id === assigneeId)) {
-            return res.status(403).json({ message: "Assignee is not a member of the project / workspace " })
-        }
-
-        const task = await prisma.task.create({
-            data: {
-                projectId,
-                title,
-                description,
-                priority,
-                assigneeId,
-                status,
-                due_date: new Date(due_date)
-            }
-        })
-
-        const taskWithAssignee = await prisma.task.findUnique({
-            where: { id: task.id },
-            include: { assignee: true }
-        })
-
-        await inngest.send({
-            name: "app/task.assigned",
-            data:  {
-                taskId: task.id, origin 
-            }
-        })
-
-        res.json({ task: taskWithAssignee, message: "Task created successfully" })
+    const origin =
+  process.env.APP_BASE_URL
+  || req.get("origin")
+  || "";
 
 
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ message: error.code || error.message });
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      include: { members: { include: { user: true } } },
+    });
+
+    if (!project)
+      return res.status(404).json({ message: "Project not found" });
+
+    if (project.team_lead !== userId)
+      return res
+        .status(403)
+        .json({ message: "Admin privileges required" });
+
+    if (
+      assigneeId &&
+      !project.members.some((m) => m.user.id === assigneeId)
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Assignee not part of project" });
     }
-}
 
+    const task = await prisma.task.create({
+      data: {
+        projectId,
+        title,
+        description,
+        status,
+        priority,
+        assigneeId,
+        due_date: due_date ? new Date(due_date) : null,
+      },
+      include: { assignee: true },
+    });
 
-//update task
+    // 🔥 Trigger Inngest ONLY if assigned
+    if (assigneeId) {
+      await inngest.send({
+        name: "app/task.assigned",
+        data: {
+          taskId: task.id,
+          origin,
+        },
+      });
+    }
+
+    res.status(201).json({
+      message: "Task created successfully",
+      task,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/* ======================================================
+   UPDATE TASK
+====================================================== */
 export const updateTask = async (req, res) => {
-    try {
-        const { userId } = await req.auth()
+  try {
+    const { userId } = await req.auth();
+    const taskId = req.params.id;
 
-        // Find the task first
-        const task = await prisma.task.findUnique({
-            where: { id: req.params.id }
-        })
+    const existingTask = await prisma.task.findUnique({
+      where: { id: taskId },
+    });
 
-        if (!task) {
-            return res.status(404).json({ message: "Task not found" })
-        }
+    if (!existingTask)
+      return res.status(404).json({ message: "Task not found" });
 
-        const { title, description, status, priority, assigneeId, due_date } = req.body;
+    const project = await prisma.project.findUnique({
+      where: { id: existingTask.projectId },
+      include: { members: { include: { user: true } } },
+    });
 
-           
-        const project = await prisma.project.findUnique({
-            where: { id: task.projectId },
-            include: { members: { include: { user: true } } }
-        })
+    if (project.team_lead !== userId)
+      return res
+        .status(403)
+        .json({ message: "Admin privileges required" });
 
-        if (!project) {
-            return res.status(404).json({ message: "Project not found" })
-        } else if (project.team_lead !== userId) {
-            return res.status(403).json({ message: "You don't have admin privileges for this project" })
-        } else if (assigneeId && !project.members.find((member) => member.user.id === assigneeId)) {
-            return res.status(403).json({ message: "Assignee is not a member of the project / workspace" })
-        }
+    const {
+      title,
+      description,
+      status,
+      priority,
+      assigneeId,
+      due_date,
+    } = req.body;
 
-         await  prisma.task.deleteMany({
-            where: {id: {in: taskIds }}
-         })
- 
-
-        res.json({ message: "Task deleted successfully" })
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ message: error.code || error.message });
+    if (
+      assigneeId &&
+      !project.members.some((m) => m.user.id === assigneeId)
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Assignee not part of project" });
     }
-}
 
-//delete task
+    const updatedTask = await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        title,
+        description,
+        status,
+        priority,
+        assigneeId,
+        due_date: due_date ? new Date(due_date) : null,
+      },
+      include: { assignee: true },
+    });
 
-export const deletetask = async (req, res) => {
-    try {
-        const { userId } = await req.auth()
-
-        const { taskIds } = await req.body
-        const tasks = await prisma.task.findMany({
-            where: {id : {in : taskIds  }}
-        })
-
-        if(tasks.length === 0  ){
-            return res.status(404).json({message: "Task not found! "})
-        }
-
-
-
-         
-        const project = await prisma.project.findUnique({
-            where: { id: tasks[0 ].projectId },
-            include: { members: { include: { user: true } } }
-        })
-
-        if (!project) {
-            return res.status(404).json({ message: "Project not found" })
-        } else if (project.team_lead !== userId) {
-            return res.status(403).json({ message: "You don't have admin privileges for this project" })
-        } else if (assigneeId && !project.members.find((member) => member.user.id === assigneeId)) {
-            return res.status(403).json({ message: "Assignee is not a member of the project / workspace" })
-        }
-
-        await prisma.task. deleteMany({where: {id: {in: taskIds }}})
- 
-
-        res.json({message: "Task deleted  successfully" })
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ message: error.code || error.message });
+    // 🔁 Send email ONLY if assignee changed
+    if (
+      assigneeId &&
+      assigneeId !== existingTask.assigneeId
+    ) {
+      await inngest.send({
+        name: "app/task.assigned",
+        data: {
+          taskId: updatedTask.id,
+          origin:
+            req.get("origin") || process.env.FRONTEND_URL,
+        },
+      });
     }
-}
+
+    res.json({
+      message: "Task updated successfully",
+      task: updatedTask,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/* ======================================================
+   DELETE TASKS (BULK)
+====================================================== */
+export const deleteTask = async (req, res) => {
+  try {
+    const { userId } = await req.auth();
+    const { taskIds } = req.body;
+
+    if (!Array.isArray(taskIds) || taskIds.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "taskIds array required" });
+    }
+
+    const tasks = await prisma.task.findMany({
+      where: { id: { in: taskIds } },
+    });
+
+    if (tasks.length === 0)
+      return res.status(404).json({ message: "Tasks not found" });
+
+    const project = await prisma.project.findUnique({
+      where: { id: tasks[0].projectId },
+    });
+
+    if (!project || project.team_lead !== userId) {
+      return res
+        .status(403)
+        .json({ message: "Admin privileges required" });
+    }
+
+    await prisma.task.deleteMany({
+      where: { id: { in: taskIds } },
+    });
+
+    res.json({ message: "Tasks deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};

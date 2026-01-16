@@ -1,10 +1,14 @@
 import express from "express";
-import { addMember, createProject, updateProject } from "../controllers/projectController.js";
+import {
+  addMember,
+  createProject,
+  updateProject,
+} from "../controllers/projectController.js";
 
-const projectRouter = express.Router(); 
+const projectRouter = express.Router();
 
-projectRouter.post('/' , createProject)
-projectRouter.put('/' , updateProject)
-projectRouter.post('/:projectId/addMember' , addMember)
+projectRouter.post("/", createProject);
+projectRouter.put("/:projectId", updateProject);
+projectRouter.post("/:projectId/add-member", addMember);
 
-export default projectRouter
+export default projectRouter;
