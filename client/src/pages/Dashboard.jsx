@@ -12,6 +12,16 @@ const Dashboard = () => {
     const { user } = useUser()
     const { getToken } = useAuth() // ← ADD this
     const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+ 
+    
+    // ADD THIS
+    console.log("=== CLERK USER DEBUG ===");
+    console.log("Clerk userId:", user?.id);
+    console.log("Clerk email:", user?.emailAddresses[0]?.emailAddress);
+    console.log("Full user object:", user);
+    
+    // ... rest of code
     
     // ========================================
     // 🔥 USER SYNC LOGIC (ADD THIS BLOCK)

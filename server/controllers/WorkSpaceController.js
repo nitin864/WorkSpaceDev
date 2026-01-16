@@ -6,37 +6,55 @@ import prisma from "../configs/prisma.js";
 export const getUserWorkSpace = async (req, res) => {
   try {
     const userId = req.auth?.userId;
+    
+    console.log("=== getUserWorkSpace DEBUG ===");
+    console.log("Requesting userId:", userId);
+    
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const workspaces = await prisma.workspace.create({
-  data: {
-    name,
-    description,
-    ownerId: userId,
-    members: {
-      create: {
-        userId,
-        role: "ADMIN",
+    const workspaces = await prisma.workspace.findMany({
+      where: {
+        members: {
+          some: { userId }
+        }
       },
-    },
-  },
-  include: {
-    members: {
       include: {
-        user: { select: { id: true, email: true, name: true } },
-      },
-    },
-  },
-});
+        projects: {
+          include: { 
+            tasks: true,
+            members: {
+              include: {
+                user: true
+              }
+            }
+          }
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                name: true
+              }
+            }
+          }
+        }
+      }
+    });
 
-    res.status(200).json({ workspaces });
+    console.log("Workspaces found:", workspaces.length);
+    console.log("First workspace members:", workspaces[0]?.members);
+
+    return res.status(200).json({ workspaces });
   } catch (error) {
     console.error("getUserWorkSpace error:", error);
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
+
 
 /* =========================
    ADD MEMBER TO WORKSPACE

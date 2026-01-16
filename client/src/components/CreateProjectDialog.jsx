@@ -6,6 +6,8 @@ import api from "../configs/api";
 import { useAuth } from "@clerk/clerk-react";
 import { addTask } from "../features/workspaceSlice";
 
+import { useEffect } from "react";
+
 const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
     const dispatch = useDispatch();
@@ -24,15 +26,30 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
         progress: 0,
     });
 
+    useEffect(() => {
+        if (!currentWorkspace?.members?.length) return;
+
+        const admin = currentWorkspace.members.find(
+            (m) => m.role === "ADMIN" && m.user?.email
+        );
+
+        if (admin && !formData.team_lead) {
+            setFormData((prev) => ({
+                ...prev,
+                team_lead: admin.user.email,
+                team_members: [admin.user.email],
+            }));
+        }
+    }, [currentWorkspace]);
+
+
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
-            if (!formData.team_lead) {
-                return toast.error("Please select the team lead")
-            }
+
 
             isSubmitting(true)
             const { data } = await api.post("/api/projects", { workspaceId: currentWorkspace.id, ...formData }, { headers: { Authorization: ` Bearer ${await getToken()}` } })
@@ -131,7 +148,10 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                             }
                             className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-sm"
                         >
-                            <option value="">No lead</option>
+                            <option value="" disabled>
+                                Select project lead
+                            </option>
+
 
                             {currentWorkspace?.members
                                 ?.filter((member) => member.user?.email)
