@@ -1,4 +1,4 @@
-# Workspace DV
+# WorkSpaceDev
 
 Workspace DV is a real-time project management platform designed to solve collaboration, visibility, and latency issues commonly faced by development teams working on shared projects.
 
