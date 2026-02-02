@@ -1,6 +1,6 @@
 # WorkSpaceDev
 
-Workspace DV is a real-time project management platform designed to solve collaboration, visibility, and latency issues commonly faced by development teams working on shared projects.
+WorkSpaceDev is a real-time project management platform designed to solve collaboration, visibility, and latency issues commonly faced by development teams working on shared projects.
 
 ## Problem Statement
 
@@ -15,7 +15,7 @@ These issues negatively impact decision-making, productivity, and overall team e
 
 ## Solution
 
-Workspace DV provides a centralized workspace where teams can manage projects, track progress, and collaborate in real time. The platform is built with a focus on low latency, scalability, and consistent state synchronization across users.
+WorkSpaceDev provides a centralized workspace where teams can manage projects, track progress, and collaborate in real time. The platform is built with a focus on low latency, scalability, and consistent state synchronization across users.
 
 Key design goals:
 - Minimize update latency
